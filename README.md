@@ -7,11 +7,11 @@
   - [Reference](#reference)
 
 ## Motivation
-In condensed matter system, system will progress to the structure which's total free energy is the lowest.
+In condensed matter system, system will progress to the structure which's total free energy is the lowest.  
 Now giving the free energy function with constant k, b
-![equation](https://latex.codecogs.com/gif.latex?F&space;=&space;\int&space;\int&space;\left&space;[&space;\frac{b}{2}\left&space;(&space;\nabla^{2}\rho&space;&plus;&space;k^{2}&space;\right&space;)^{2}-\frac{r}{2}\rho^{2}&space;&plus;&space;\frac{1}{4}\rho^{4}&space;\right&space;]dxdy)
-and find out the density function ![rho](https://latex.codecogs.com/gif.latex?\rho(x,&space;y)) that produce the lowest F.
-If we put the system in the square box with length L, the density function will develop to the periodic form. But if we take the first reesult and extrude the box size to (0.5L, 2L), there are some defect will be produce.
+![equation](https://latex.codecogs.com/gif.latex?F&space;=&space;\int&space;\int&space;\left&space;[&space;\frac{b}{2}\left&space;(&space;\nabla^{2}\rho&space;&plus;&space;k^{2}&space;\right&space;)^{2}-\frac{r}{2}\rho^{2}&space;&plus;&space;\frac{1}{4}\rho^{4}&space;\right&space;]dxdy)  
+and find out the density function ![rho](https://latex.codecogs.com/gif.latex?\rho(x,&space;y)) that produce the lowest F.  
+If we put the system in the square box with length L, the density function will develop to the periodic form. But if we take the first reesult and extrude the box size to (0.5L, 2L), there are some defect will be produce.  
 If we can simulate the defect production with custum constant k, b and the different extrusion, the related research will be benefit.
 ## Ideas
 ### Targets of Project
