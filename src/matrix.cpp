@@ -24,8 +24,8 @@ public:
     {
         reset_buffer(nrow, ncol);
     }
-    Matrix(size_t nrow, size_t ncol, double d, double dx, double dy)
-            : m_nrow(nrow), m_ncol(ncol), m_d(d), m_dx(dx), m_dy(dy)
+    Matrix(size_t nrow, size_t ncol, double b, double k, double r, double step, double dx, double dy)
+            : m_nrow(nrow), m_ncol(ncol), m_b(b), m_k(k), m_r(r), m_step(step), m_dx(dx), m_dy(dy)
     {
         reset_buffer(nrow, ncol);
         cal_max_dt();
@@ -42,7 +42,8 @@ public:
     }
 
     Matrix(Matrix const & other)
-            : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_d(other.m_d),
+            : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_b(other.m_b),
+             m_k(other.m_k), m_r(other.m_r), m_step(other.m_step),
             m_dx(other.m_dx), m_dy(other.m_dy)
     {
 
@@ -57,17 +58,18 @@ public:
     }
 
     Matrix(Matrix && other)
-            : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_d(other.m_d),
-              m_dx(other.m_dx), m_dy(other.m_dy)
+            : m_nrow(other.m_nrow), m_ncol(other.m_ncol), m_b(other.m_b),
+              m_k(other.m_k), m_r(other.m_r), m_step(other.m_step),
+            m_dx(other.m_dx), m_dy(other.m_dy)
     {
         reset_buffer(0, 0);
         std::swap(m_nrow, other.m_nrow);
         std::swap(m_ncol, other.m_ncol);
-        std::swap(m_d, other.m_d);
-//        std::swap(m_b, other.m_b);
-//        std::swap(m_k, other.m_k);
-//        std::swap(m_r, other.m_r);
-//        std::swap(m_step, other.m_step);
+//        std::swap(m_d, other.m_d);
+        std::swap(m_b, other.m_b);
+        std::swap(m_k, other.m_k);
+        std::swap(m_r, other.m_r);
+        std::swap(m_step, other.m_step);
         std::swap(m_dx, other.m_dx);
         std::swap(m_dy, other.m_dy);
         std::swap(m_buffer, other.m_buffer);
@@ -99,11 +101,11 @@ public:
         if (m_nrow != other.m_nrow || m_ncol != other.m_ncol)
         {
             reset_buffer(other.m_nrow, other.m_ncol);
-            this->set_d(other.d());
-//            this->set_b(other.b());
-//            this->set_k(other.k());
-//            this->set_r(other.r());
-//            this->set_step(other.step());
+//            this->set_d(other.d());
+            this->set_b(other.b());
+            this->set_k(other.k());
+            this->set_r(other.r());
+            this->set_step(other.step());
             this->set_dx(other.dx());
             this->set_dy(other.dy());
         }
@@ -114,11 +116,11 @@ public:
                 (*this)(i,j) = other(i,j);
             }
         }
-        this->set_d(other.d());
-//        this->set_b(other.b());
-//        this->set_k(other.k());
-//        this->set_r(other.r());
-//        this->set_step(other.step());
+//        this->set_d(other.d());
+        this->set_b(other.b());
+        this->set_k(other.k());
+        this->set_r(other.r());
+        this->set_step(other.step());
         this->set_dx(other.dx());
         this->set_dy(other.dy());
         return *this;
@@ -130,11 +132,11 @@ public:
         reset_buffer(0, 0);
         std::swap(m_nrow, other.m_nrow);
         std::swap(m_ncol, other.m_ncol);
-        std::swap(m_d, other.m_d);
-//        std::swap(m_b, other.m_b);
-//        std::swap(m_k, other.m_k);
-//        std::swap(m_r, other.m_r);
-//        std::swap(m_step, other.m_step);
+//        std::swap(m_d, other.m_d);
+        std::swap(m_b, other.m_b);
+        std::swap(m_k, other.m_k);
+        std::swap(m_r, other.m_r);
+        std::swap(m_step, other.m_step);
         std::swap(m_dx, other.m_dx);
         std::swap(m_dy, other.m_dy);
         std::swap(m_buffer, other.m_buffer);
@@ -158,7 +160,8 @@ public:
     bool const true_equal(Matrix const &right) {
 
         if (m_nrow != right.nrow() && m_ncol != right.ncol()
-            && m_d != right.d()) {
+            && m_b != right.b() && m_k != right.k()
+           && m_r != right.r() && m_step != right.step()) {
             return false;
         }
         const double *right_buf = right.data();
@@ -174,22 +177,22 @@ public:
 
     size_t nrow() const { return m_nrow; }
     size_t ncol() const { return m_ncol; }
-    double d() const { return m_d; }
-//    double b() const { return m_b; }
-//    double k() const { return m_k; }
-//    double r() const { return m_r; }
+//    double d() const { return m_d; }
+    double b() const { return m_b; }
+    double k() const { return m_k; }
+    double r() const { return m_r; }
     double t() const { return m_t; }
-//    double step() const { return m_step; }
+    double step() const { return m_step; }
     double dx() const { return m_dx; }
     double dy() const { return m_dy; }
     double max_dt() const { return m_max_dt; }
 
-    void set_d(double d){ m_d = d;}
-//    void set_b(double b){ m_b = b;}
-//    void set_k(double k){ m_k = k;}
-//    void set_r(double r){ m_r = r;}
+//    void set_d(double d){ m_d = d;}
+    void set_b(double b){ m_b = b;}
+    void set_k(double k){ m_k = k;}
+    void set_r(double r){ m_r = r;}
     void set_t(double t){ m_t = t;}
-//    void set_step(double step){ m_step = step;}
+    void set_step(double step){ m_step = step;}
     void set_dx(double dx){ m_dx = dx;}
     void set_dy(double dy){ m_dy = dy;}
 
@@ -253,13 +256,19 @@ public:
 
     // helper function
     double cal_slop(size_t x, size_t y){
-//        return m_b*(pow(laplacian(x, y), 2) + 2*m_k*laplacian(x, y) + pow(m_k, 2)*edge_protect(x, y))
-//                - m_r*edge_protect(x, y) + pow(edge_protect(x, y), 3); // Defect generate function
-        return m_d * laplacian(x, y); // spread function
+        return m_b*(laplacian_2(x, y) + 2*m_k*laplacian(x, y) + pow(m_k, 2)*edge_protect(x, y))
+                - m_r*edge_protect(x, y) + pow(edge_protect(x, y), 3); // Defect generate function
+//        return m_d * laplacian(x, y); // spread function
     }
     double laplacian(size_t x, size_t y){
         return ((edge_protect(x+1, y) + edge_protect(x-1, y) - 2*edge_protect(x, y))
                 + (edge_protect(x, y+1) + edge_protect(x, y-1) - 2*edge_protect(x, y)));
+    }
+    double laplacian_2(size_t x, size_t y){
+        // d/dx^4 + 2*d/dx^2dy^2 + d/dy^4
+        return (edge_protect(x+4,y)-2*edge_protect(x+3,y)+2*edge_protect(x+1,y)-2*edge_protect(x,y)+2*edge_protect(x-1,y)-2*edge_protect(x-3,y)+edge_protect(x-4,y))/dx()/dx()/dx()/dx()
+        + 2*(edge_protect(x+1,y+1)+edge_protect(x+1,y-1)-2*edge_protect(x+1,y) + edge_protect(x-1,y+1)+edge_protect(x-1,y-1)-2*edge_protect(x-1,y) - 2*edge_protect(x,y+1)-2*edge_protect(x,y-1)+4*edge_protect(x,y))/dx()/dx()/dy()/dy()
+        + (edge_protect(x,y+4)-2*edge_protect(x,y+3)+2*edge_protect(x,y+1)-2*edge_protect(x,y)+2*edge_protect(x,y-1)-2*edge_protect(x,y-3)+edge_protect(x,y-4))/dy()/dy()/dy()/dy();
     }
     double edge_protect(size_t x, size_t y){
         size_t fixed_x = x;
@@ -306,8 +315,8 @@ public:
 //        }
     }
     double cal_max_dt(){
-        // use spread constant and dx to find the max allowed dt, x0.3 for safety
-        m_max_dt = 0.3 * m_d * m_dx * m_dx;
+        // find the max allowed dt, x0.3 for safety
+        m_max_dt = 0.3 * m_dx * m_dx;
         return m_max_dt;
     }
     // nd_array
@@ -334,11 +343,11 @@ private:
 
     size_t m_nrow = 0;
     size_t m_ncol = 0;
-//    double m_b = 0;
-//    double m_k = 0;
-//    double m_r = 0;
-//    double m_step = 0;  // changing speed
-    double m_d = 0; // spread constant: must < 0.5
+    double m_b = 0;
+    double m_k = 0;
+    double m_r = 0;
+    double m_step = 0;  // changing speed
+//    double m_d = 0; // spread constant: must < 0.5
     double m_max_dt = 0;  // system allowed minimum dt
     double m_dx = 0;      // used in calculate laplacian
     double m_dy = 0;
@@ -503,27 +512,27 @@ Matrix iterate(Matrix &mat, double dt){
     bool forward = (dt>=0) ? true : false;
     double slop;
     int num_dt = abs(dt/mat.max_dt()); // How many max_dt are contain in dt
-    double dt_remain = dt;
-//    double dt_remain = dt - num_dt*mat.max_dt();
-//    for (int k=0; k<num_dt;k++) { // each step is max_dt, run num_dt steps
-//        for (size_t i = 0; i < mat.nrow(); i++) {
-//            for (size_t j = 0; j < mat.ncol(); j++) {
-//                slop = mat.cal_slop(i, j);
-//                if (forward)
-//                    ret(i, j) -= mat.max_dt() * mat.d() * slop;
-//                else
-//                    ret(i, j) += mat.max_dt() * mat.d() * slop;
-//            }
-//        }
-//    }
+//    double dt_remain = dt;
+    double dt_remain = dt - num_dt*mat.max_dt();
+    for (int k=0; k<num_dt;k++) { // each step is max_dt, run num_dt steps
+        for (size_t i = 0; i < mat.nrow(); i++) {
+            for (size_t j = 0; j < mat.ncol(); j++) {
+                slop = mat.cal_slop(i, j);
+                if (forward)
+                    ret(i, j) -= mat.max_dt() * mat.step() * slop;
+                else
+                    ret(i, j) += mat.max_dt() * mat.step() * slop;
+            }
+        }
+    }
     // deal with the remain dt
     for (size_t i = 0; i < mat.nrow(); i++) {
         for (size_t j = 0; j < mat.ncol(); j++) {
             slop = mat.cal_slop(i, j);
             if (forward)
-                ret(i, j) += dt_remain * mat.d() * slop;
+                ret(i, j) -= dt_remain * mat.step() * slop;
             else
-                ret(i, j) -= dt_remain * mat.d() * slop;
+                ret(i, j) += dt_remain * mat.step() * slop;
         }
     }
     mat = ret;
@@ -584,7 +593,7 @@ PYBIND11_MODULE(_matrix, m){
 m.doc() = "pybin11 plugin to calculate the matrix matrix multiply";
 py::class_<Matrix>(m, "Matrix")
 .def(py::init<size_t, size_t>())
-.def(py::init<size_t, size_t, double, double, double>())
+.def(py::init<size_t, size_t, double, double, double, double, double, double>())
 .def_property_readonly("nrow", &Matrix::nrow)
 .def_property_readonly("ncol", &Matrix::ncol)
 .def("__getitem__", [](Matrix &self, std::pair<size_t, size_t> index)
@@ -597,20 +606,20 @@ py::class_<Matrix>(m, "Matrix")
 .def("set_all_0", &Matrix::set_all_0, "set all values in matrix to zero")
 .def("cal_max_dt", &Matrix::cal_max_dt, "calculate minimum allowed dt")
 .def("cal_slop", &Matrix::cal_slop, "calculate the slop of (x, y)")
-.def_property_readonly("d", &Matrix::d)
-//.def_property_readonly("b", &Matrix::b)
-//.def_property_readonly("k", &Matrix::k)
-//.def_property_readonly("r", &Matrix::r)
+//.def_property_readonly("d", &Matrix::d)
+.def_property_readonly("b", &Matrix::b)
+.def_property_readonly("k", &Matrix::k)
+.def_property_readonly("r", &Matrix::r)
 .def_property_readonly("t", &Matrix::t)
-//.def_property_readonly("step", &Matrix::step)
+.def_property_readonly("step", &Matrix::step)
 .def_property_readonly("dx", &Matrix::dx)
 .def_property_readonly("dy", &Matrix::dy)
 .def_property_readonly("max_dt", &Matrix::max_dt)
-.def("set_d", &Matrix::set_d)
-//.def("set_b", &Matrix::set_b)
-//.def("set_k", &Matrix::set_k)
-//.def("set_r", &Matrix::set_r)
-//.def("set_step", &Matrix::set_step)
+//.def("set_d", &Matrix::set_d)
+.def("set_b", &Matrix::set_b)
+.def("set_k", &Matrix::set_k)
+.def("set_r", &Matrix::set_r)
+.def("set_step", &Matrix::set_step)
 .def("set_dx", &Matrix::set_dx)
 .def("set_dy", &Matrix::set_dy);
 
